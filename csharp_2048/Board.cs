@@ -14,6 +14,7 @@ namespace csharp_2048
     {
         public static readonly Point offset = new Point(18, 138);
         private bool lockKeyboard = false;
+        private bool anythingHappened = false;
         Keys[] arrows = { Keys.Up, Keys.Left, Keys.Right, Keys.Down };
         public Board()
         {
@@ -26,7 +27,6 @@ namespace csharp_2048
             {
                 if (!lockKeyboard)
                 {
-                    Debug.WriteLine("DZIALA");
                     MakeMove(keyboard.GetPressedKeys()[0]);
                     lockKeyboard = true;
                 }
@@ -39,9 +39,6 @@ namespace csharp_2048
         List<Block> blocks = new List<Block>();
         public void MakeMove(Keys key)
         {
-            //  AddNew();
-            //AddNew();
-            //AddNew();
             int[,] table = new int[4, 4];
             for (int x = 0; x < table.GetLength(0); x++)
             {
@@ -52,7 +49,7 @@ namespace csharp_2048
             }
             int i = 0;
             foreach (var block in blocks)
-            { 
+            {
                 switch (key)
                 {
                     case Keys.Up:
@@ -73,7 +70,7 @@ namespace csharp_2048
                 }
             }
             Dictionary<int, int> fused = new Dictionary<int, int>();
-            bool happenedAnything = false;
+            anythingHappened = false;
             for (int x = 0; x < table.GetLength(0); x++)
             {
                 bool happened;
@@ -88,8 +85,8 @@ namespace csharp_2048
                             blocks[table[x, y - 1]].state == BlockState.Nothing)
                         {
                             fused.Add(table[x, y - 1], table[x, y]);
-                            blocks[table[x, y]].state = BlockState.Destroy;
-                            blocks[table[x, y - 1]].state = BlockState.Upgrade;
+                            blocks[table[x, y]].state = BlockState.Upgrade;
+                            blocks[table[x, y - 1]].state = BlockState.Destroy;
                             table[x, y] = -1;
                             happened = true;
                             break;
@@ -102,7 +99,7 @@ namespace csharp_2048
                             break;
                         }
                     }
-                    happenedAnything = happenedAnything || happened;
+                    anythingHappened = anythingHappened || happened;
                 } while (happened);
             }
             for (int x = 0; x < table.GetLength(0); x++)
@@ -133,27 +130,21 @@ namespace csharp_2048
             {
                 blocks[pair.Value].to = new Point(blocks[pair.Key].to.X, blocks[pair.Key].to.Y);
             }
-            Clear();
-            if (happenedAnything)
+            if (anythingHappened)
             {
-                AddNew();
+                Block.ticks = 0;
             }
         }
         private void Clear()
         {
-            blocks.RemoveAll((Block x) => {return x.state == BlockState.Destroy; });
-            for(int i=0; i<blocks.Count(); i++)
+            blocks.RemoveAll((Block x) => { return x.state == BlockState.Destroy; });
+            for (int i = 0; i < blocks.Count(); i++)
             {
-                if(blocks[i].state == BlockState.Upgrade)
+                if (blocks[i].state == BlockState.Upgrade)
                 {
                     blocks[i].Upgrade();
                 }
             }
-            foreach(var block in blocks)
-            {
-                block.from = new Point(block.to.X, block.to.Y);
-            }
-            
         }
         private void AddNew()
         {
@@ -166,11 +157,28 @@ namespace csharp_2048
             blocks.Add(new Block(new Point(num / 4, num % 4)));
             return;
         }
-        public void drawBlocks(Dictionary<int, Texture2D> textures)
+        public void drawBlocks()
         {
-            foreach (var block in blocks)
+            blocks.Where(block => { return block.state == BlockState.Destroy; })
+                  .ToList()
+                  .ForEach(block => { block.Draw(); });
+            blocks.Where(block => { return block.state != BlockState.Destroy; })
+                  .ToList()
+                  .ForEach(block => { block.Draw(); });
+            if (Block.ticks < Block.maxTicks)
             {
-                block.Draw3(textures);
+                Block.ticks++;
+            }
+            else
+            {
+                blocks.ForEach(block => { block.from = new Point(block.to.X, block.to.Y); });
+
+                Clear();
+                if (anythingHappened)
+                {
+                    anythingHappened = false;
+                    AddNew();
+                }
             }
         }
     }

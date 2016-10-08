@@ -15,11 +15,19 @@ namespace csharp_2048
         Upgrade,
         Destroy
     }
-    public class Block : Game
+    public class Block
     {
-        public static readonly Point textureSize = new Point(84, 84);
-        public static readonly Point size = new Point(70, 70);
-        public static readonly Point gap = new Point(10, 10);
+        private static readonly Point textureSize = new Point(84, 84);
+        private static readonly Point size = new Point(70, 70);
+        private static readonly Point gap = new Point(10, 10);
+        public static readonly int maxTicks = 10;
+        private static Dictionary<int, Texture2D> textures;
+        public static void setTextures(Dictionary<int, Texture2D> dict)
+        {
+            textures = dict;
+            return;
+        }
+        public static int ticks = 5;
         public Point from;
         public Point to;
         public BlockState state = BlockState.Nothing;
@@ -34,33 +42,17 @@ namespace csharp_2048
             return value;
         }
         private Rectangle rect;
-        public void Draw(Texture2D text, SpriteBatch spriteBatch)
-        {
-            spriteBatch.Draw(text, rect, Color.White);
-            return;
-        }
-        public void Draw2(Texture2D text)
-        {
-            spriteBatch.Draw(text, rect, Color.White);
-            return;
-        }
         public Rectangle GetRect()
         {
-            rect.X = Board.offset.X + to.X * (size.X+gap.X);
-            rect.Y = Board.offset.Y + to.Y * (size.Y+gap.Y);
+            rect.X = Board.offset.X + (from.X * (maxTicks - ticks) + to.X * ticks) * (size.X + gap.X) / maxTicks;
+            rect.Y = Board.offset.Y + (from.Y * (maxTicks - ticks) + to.Y * ticks) * (size.Y + gap.Y) / maxTicks;
             return rect;
         }
-        public void Draw3(Dictionary<int, Texture2D> textures)
+        public void Draw()
         {
             spriteBatch.Draw(textures[GetValue()], GetRect(), Color.White);
-           // Debug.WriteLine("POWINIENEM RYSOWAC");
         }
         public static SpriteBatch spriteBatch;
-        public Block(int x, int y)
-        {
-            value = 2;
-            rect = new Rectangle(Board.offset, Block.textureSize);
-        }
         public Block(Point point)
         {
             value = 2;
@@ -69,11 +61,6 @@ namespace csharp_2048
             rect = new Rectangle(Board.offset, Block.textureSize);
             state = BlockState.Nothing;
             GetRect();
-        }
-        public static bool test(Block x)
-        {
-            Debug.WriteLine("testuje");
-            return x.state == BlockState.Destroy;
         }
     }
 }

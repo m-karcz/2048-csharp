@@ -18,10 +18,8 @@ namespace csharp_2048
         private Texture2D background;
         private Texture2D blueSqr;
         private Rectangle blueRect;
-        private Texture2D _2;
         bool right = false;
         private Dictionary<int, Texture2D> blockTexture;
-        Block kek;
         Board board;
         public static Random rnd = new Random();
         public Game1()
@@ -33,8 +31,8 @@ namespace csharp_2048
             Content.RootDirectory = "Content";
             this.Window.Title = "2048 by MCNH";
             blockTexture = new Dictionary<int, Texture2D>();
+            Block.setTextures(blockTexture);
             board = new Board();
-            kek = new csharp_2048.Block(1, 1);
         }
 
         /// <summary>
@@ -62,7 +60,6 @@ namespace csharp_2048
             Block.spriteBatch = spriteBatch;
             background = Content.Load<Texture2D>("background");
             blueSqr = Content.Load<Texture2D>("blueSqr");
-            //_2 = Content.Load<Texture2D>("newBlocks/block_256");
             for (int i = 2; i <= 2048; i = i * 2)
             {
                 blockTexture.Add(i, Content.Load<Texture2D>("blocks/block_" + i));
@@ -119,10 +116,7 @@ namespace csharp_2048
             spriteBatch.Begin();
             spriteBatch.Draw(background, new Rectangle(0, 0, 360, 480), Color.White);
             spriteBatch.Draw(blueSqr, blueRect, Color.White);
-            //  spriteBatch.Draw(blockTexture[512], new Rectangle(Board.offset + Block.size + Block.gap, Block.textureSize), Color.White);
-            //kek.Draw(blockTexture[4], spriteBatch);
-            // kek.Draw2(blockTexture[8]);
-            board.drawBlocks(blockTexture);
+            board.drawBlocks();
             spriteBatch.End();
             // TODO: Add your drawing code here
 
