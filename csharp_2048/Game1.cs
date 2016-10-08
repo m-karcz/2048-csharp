@@ -16,22 +16,27 @@ namespace csharp_2048
         GraphicsDeviceManager graphics;
         SpriteBatch spriteBatch;
         private Texture2D background;
-        private Texture2D blueSqr;
-        private Rectangle blueRect;
-        bool right = false;
         private Dictionary<int, Texture2D> blockTexture;
         Board board;
+        SpriteFont font;
         public static Random rnd = new Random();
+        private Texture2D win;
+        private Texture2D newGameTexture;
+        private Rectangle newGame;
+        private bool lockMouse = false;
+        private Rectangle cont;
+        private Texture2D gameOver;
         public Game1()
         {
             graphics = new GraphicsDeviceManager(this);
             graphics.PreferredBackBufferHeight = 480;
             graphics.PreferredBackBufferWidth = 360;
-            blueRect = new Rectangle(20, 20, 32, 32);
             Content.RootDirectory = "Content";
             this.Window.Title = "2048 by MCNH";
             blockTexture = new Dictionary<int, Texture2D>();
             Block.setTextures(blockTexture);
+            newGame = new Rectangle(360 - 120 - 20, 30, 120, 60);
+            cont = new Rectangle(90,215+120, 180, 60);
             board = new Board();
         }
 
@@ -44,7 +49,7 @@ namespace csharp_2048
         protected override void Initialize()
         {
             // TODO: Add your initialization logic here
-
+            this.IsMouseVisible = true;
             base.Initialize();
 
         }
@@ -55,16 +60,17 @@ namespace csharp_2048
         /// </summary>
         protected override void LoadContent()
         {
-            // Create a new SpriteBatch, which can be used to draw textures.
             spriteBatch = new SpriteBatch(GraphicsDevice);
             Block.spriteBatch = spriteBatch;
             background = Content.Load<Texture2D>("background");
-            blueSqr = Content.Load<Texture2D>("blueSqr");
             for (int i = 2; i <= 2048; i = i * 2)
             {
                 blockTexture.Add(i, Content.Load<Texture2D>("blocks/block_" + i));
             }
-            // TODO: use this.Content to load your game content here
+            font = Content.Load<SpriteFont>("testfont");
+            win = Content.Load<Texture2D>("youwon");
+            newGameTexture = Content.Load<Texture2D>("newgame");
+            gameOver = Content.Load<Texture2D>("gameover");
         }
 
         /// <summary>
@@ -85,23 +91,24 @@ namespace csharp_2048
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-            board.ControlKeyboard(Keyboard.GetState());
-            // TODO: Add your update logic here
-            if (right)
+            board.ControlKeyboard();
+            if(Mouse.GetState().LeftButton == ButtonState.Pressed &&
+                newGame.Contains(Mouse.GetState().Position))
             {
-                blueRect.X += 5;
-                if (blueRect.X > 200)
+                if (!lockMouse)
                 {
-                    right = false;
+                    board.Reset();
+                    lockMouse = true;
                 }
+            }else
+            {
+                lockMouse = false;
             }
-            else
+            if (board.toDraw==ToDraw.Win &&
+                Mouse.GetState().LeftButton == ButtonState.Pressed &&
+                cont.Contains(Mouse.GetState().Position))
             {
-                blueRect.X -= 5;
-                if (blueRect.X < 10)
-                {
-                    right = true;
-                }
+                board.toDraw = ToDraw.Nothing;
             }
             base.Update(gameTime);
         }
@@ -112,14 +119,22 @@ namespace csharp_2048
         /// <param name="gameTime">Provides a snapshot of timing values.</param>
         protected override void Draw(GameTime gameTime)
         {
-            GraphicsDevice.Clear(Color.CornflowerBlue);
             spriteBatch.Begin();
             spriteBatch.Draw(background, new Rectangle(0, 0, 360, 480), Color.White);
-            spriteBatch.Draw(blueSqr, blueRect, Color.White);
-            board.drawBlocks();
+            board.DrawBlocks();
+            spriteBatch.DrawString(font, "Score:", new Vector2(10, 10), Color.White);
+            spriteBatch.DrawString(font, board.GetPoints().ToString(), new Vector2(10, 50), Color.White);
+            switch (board.toDraw)
+            {
+                case ToDraw.Win:
+                    spriteBatch.Draw(win, new Rectangle(0, 120, 360, 360), Color.White);
+                    break;
+                case ToDraw.Lose:
+                    spriteBatch.Draw(gameOver, new Rectangle(0, 120, 360, 360), Color.White);
+                    break;
+            }
+            spriteBatch.Draw(newGameTexture, newGame, Color.White);
             spriteBatch.End();
-            // TODO: Add your drawing code here
-
             base.Draw(gameTime);
         }
     }

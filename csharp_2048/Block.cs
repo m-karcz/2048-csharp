@@ -25,17 +25,17 @@ namespace csharp_2048
         public static void setTextures(Dictionary<int, Texture2D> dict)
         {
             textures = dict;
-            return;
         }
         public static int ticks = 5;
-        public Point from;
-        public Point to;
-        public BlockState state = BlockState.Nothing;
+        internal Point from;
+        internal Point to;
+        internal BlockState state;
         private int value = 0;
-        public void Upgrade()
+        public int Upgrade()
         {
             value = value << 1;
             state = BlockState.Nothing;
+            return value;
         }
         public int GetValue()
         {
